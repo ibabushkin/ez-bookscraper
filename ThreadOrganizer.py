@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from string import punctuation
 
 from ThreadFinder import scrape_all
 
@@ -17,7 +18,11 @@ class Category(object):
         self.read_tags(dirname + "/tags")
         self.children = [Category(dirname + "/" + n, level+1)
                          for n in os.listdir(dirname) if "tags" not in n]
+        self.children.sort(key=lambda x: x.name)
         self.books = []
+
+    def __cmp__(self, other):
+        return cmp(self.name, other.name)
 
     def read_tags(self, filename):
         """Get all tags from a file.
@@ -35,13 +40,18 @@ class Category(object):
             if self.match(book.name):
                 self.books.append(book)
                 rest.remove(book)
+        self.books.sort(key=lambda x: x.name)
         return rest
 
     def match(self, book_name):
         """Check whether our book matches the category.
         """
+        exclude = set(punctuation)
+        book_name = ''.join(ch for ch in book_name if ch not in exclude)
         for tag in self.tags:
-            if tag in book_name.lower().split(" "):
+            if " " in tag and tag in book_name.lower():
+                return True
+            elif tag in book_name.lower().split(" "):
                 return True
         return False
 
