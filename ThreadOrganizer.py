@@ -41,7 +41,7 @@ class Category(object):
         """Check whether our book matches the category.
         """
         for tag in self.tags:
-            if tag in book_name.lower():
+            if tag in book_name.lower().split(" "):
                 return True
         return False
 
