@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
+from os.path import isfile
 from string import punctuation
+import requests
 
 from ThreadFinder import scrape_all
 
@@ -56,18 +58,72 @@ class Category(object):
         return False
 
     def print_it(self):
+        """Return a nice representation.
+        """
         header = "=" * self.level
-        print(header + " " + self.name + " " + header)
+        ret = header + " " + self.name + " " + header + "\n"
         for book in self.books:
-            book.print_it()
+            ret += book.print_it()
         for child in self.children:
-            child.print_it()
+            ret += child.print_it()
+        return ret
 
-if __name__ == "__main__":
+
+def generate():
+    """Generate a wiki article with all books.
+    """
     cat = Category("Books")
     books = scrape_all()
     rest = cat.sort_books(books)
-    cat.print_it()
-    print("= Misc =")
+    ret = cat.print_it()
+    ret += "= Misc =\n"
     for book in rest:
-        book.print_it()
+        ret += book.print_it()
+    return ret
+
+
+def password_wrapper():
+    if isfile("password"):
+        return tuple(open("password").read().split("\n")[:2])
+    else:
+        return (input("Username: "), input("Password: "))
+
+
+def post():
+    """Post a new index to the wiki.
+    """
+    user, passw = password_wrapper()
+    baseurl = "https://evilzone.org/wiki/"
+    params = "?action=login&lgname=%s&lgpassword=%s&format=json" % (user, passw)
+
+    # Login request
+    r1 = requests.post(baseurl+"api.php"+params)
+    token = r1.json()["login"]["token"]
+
+    # Confirm token; should give "Success"
+    params2 = params + "&lgtoken=%s" % token
+    r2 = requests.post(baseurl+"api.php"+params2, cookies=r1.cookies)
+
+    params3 = "?format=json&action=query&meta=tokens&continue="
+    r3 = requests.post(baseurl+"api.php"+params3, cookies=r2.cookies)
+    edit_token = r3.json()["query"]["tokens"]["csrftoken"]
+
+    edit_cookie = r2.cookies.copy()
+    edit_cookie.update(r3.cookies)
+
+    # save action
+    headers = {"content-type": "application/x-www-form-urlencoded"}
+    payload = {"action": "edit",
+               "assert": "user",
+               "format": "json",
+               "text": generate(),
+               "summary": "Generated index",
+               "title": "The big ebook index",
+               "token": edit_token
+               }
+    r4 = requests.post(baseurl+'api.php',
+                       headers=headers, data=payload, cookies=edit_cookie)
+    print(r4.json()["edit"]["result"])
+
+if __name__ == "__main__":
+    post()

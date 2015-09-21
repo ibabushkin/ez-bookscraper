@@ -43,6 +43,7 @@ def check_url(url):
         "sort" not in url and \
         "ebook-request-topic" not in url and \
         "board-rules" not in url and \
+        "general-rules" not in url and \
         "searching-for-ebooks" not in url and \
         "ebook-index" not in url and \
         "/ebooks/?" not in url and \
@@ -68,7 +69,9 @@ class Book(object):
         self.link = dl_link
 
     def print_it(self):
-        print("* [" + self.link + " " + self.name + "]")
+        """Return a nice representation.
+        """
+        return "* [" + self.link + " " + self.name + "]\n"
 
 if __name__ == '__main__':
     for i in scrape_all():
