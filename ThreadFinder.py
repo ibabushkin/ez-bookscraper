@@ -1,15 +1,15 @@
-import requests
-from bs4 import BeautifulSoup
+from robobrowser import RoboBrowser
+from robobrowser.forms.form import Form
 
 
-def scrape(n):
+def scrape(browser, n):
     """get all threads from a forum page.
     """
     thread_urls = []
     page_urls = []
     url = "http://www.evilzone.org/ebooks/" + str(n)
-    soup = BeautifulSoup(requests.get(url).content, "html.parser")
-    for link in soup.find_all("a"):
+    browser.open(url)
+    for link in browser.find_all("a"):
         url = link.get("href")
         if url:
             if check_url(url):
@@ -22,15 +22,25 @@ def scrape(n):
 def scrape_all():
     """Get all potentially relevant threads from the ebook board.
     """
+    browser = RoboBrowser(history=True)
+    browser.open('https://www.evilzone.org/login')
+    form = browser.get_form(0)
+    assert isinstance(form, Form)
+
+    form["user"] = input("EZ Username: ")
+    form["passwrd"] = input("Password: ")
+
+    browser.submit_form(form)
+
     threads = []
     num_page = 0
     last_url = ""
     while ("/ebooks/" + str(num_page)) not in last_url:
-        ts, last_url = scrape(num_page)
-        # print "Current: " + str(num_page)
+        ts, last_url = scrape(browser, num_page)
+        print("Current: " + str(num_page))
         threads += ts
         num_page += 25
-    ts, last_url = scrape(num_page)
+    ts, last_url = scrape(browser, num_page)
     return threads + ts
 
 
@@ -74,5 +84,4 @@ class Book(object):
         return "* [" + self.link + " " + self.name + "]\n"
 
 if __name__ == '__main__':
-    for i in scrape_all():
-        i.print_it()
+    scrape_all()
