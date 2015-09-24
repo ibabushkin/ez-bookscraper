@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from robobrowser import RoboBrowser
 from robobrowser.forms.form import Form
 
@@ -102,6 +103,3 @@ class Book(object):
         """Return a nice representation.
         """
         return "* [" + self.link + " " + self.name + "]\n"
-
-if __name__ == '__main__':
-    scrape_all()

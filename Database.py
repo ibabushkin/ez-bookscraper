@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import sqlite3
+from os import remove
 import ThreadFinder
 
 
@@ -10,6 +12,19 @@ def init_database():
     c.execute("CREATE TABLE books (name text, url text)")
     connection.commit()
     connection.close()
+
+
+def clean():
+    """Reset the Database.
+    """
+    remove("books.db")
+    init_database()
+
+
+def stats():
+    """Print database statistics.
+    """
+    print("Number of books indexed: %d" % len(get_books()))
 
 
 def get_books():
@@ -46,7 +61,3 @@ def insert_books(books):
     connection.commit()
     connection.close()
     return n
-
-
-if __name__ == "__main__":
-    init_database()

@@ -4,7 +4,7 @@ from os.path import isfile
 from string import punctuation
 import requests
 
-from ThreadFinder import scrape_recent
+from ThreadFinder import scrape_recent, scrape_all
 import Database
 
 
@@ -74,7 +74,9 @@ def generate(force=False):
     """Generate a wiki article with all books.
     """
     cat = Category("Books")
-    if scrape_recent() > 0 or force:
+    if force or scrape_recent() > 0:
+        if force:
+            scrape_all()
         rest = Database.get_books()
         cat.sort_books(rest)
         ret = cat.print_it()
@@ -130,6 +132,3 @@ def post_to_wiki(text):
     r4 = requests.post(baseurl+'api.php',
                        headers=headers, data=payload, cookies=edit_cookie)
     print(r4.json()["edit"]["result"])
-
-if __name__ == "__main__":
-    generate()
