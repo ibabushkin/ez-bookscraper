@@ -4,7 +4,8 @@ from os.path import isfile
 from string import punctuation
 import requests
 
-from ThreadFinder import scrape_all
+from ThreadFinder import scrape_recent
+import Database
 
 
 class Category(object):
@@ -73,23 +74,27 @@ def generate():
     """Generate a wiki article with all books.
     """
     cat = Category("Books")
-    books = scrape_all()
-    rest = cat.sort_books(books)
-    ret = cat.print_it()
-    ret += "= Misc =\n"
-    for book in rest:
-        ret += book.print_it()
-    return ret
+    if scrape_recent() > 0:
+        rest = Database.get_books()
+        ret = cat.print_it()
+        ret += "= Misc =\n"
+        for book in rest:
+            ret += book.print_it()
+        post_to_wiki(ret)
+    else:
+        print("Nothing to do!")
 
 
 def password_wrapper():
+    """Get a password + username for wiki access.
+    """
     if isfile("password"):
         return tuple(open("password").read().split("\n")[:2])
     else:
         return (input("Username: "), input("Password: "))
 
 
-def post():
+def post_to_wiki(text):
     """Post a new index to the wiki.
     """
     user, passw = password_wrapper()
@@ -116,7 +121,7 @@ def post():
     payload = {"action": "edit",
                "assert": "user",
                "format": "json",
-               "text": generate(),
+               "text": text,
                "summary": "Generated index",
                "title": "The big ebook index",
                "token": edit_token
@@ -126,4 +131,4 @@ def post():
     print(r4.json()["edit"]["result"])
 
 if __name__ == "__main__":
-    post()
+    generate()

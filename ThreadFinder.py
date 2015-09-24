@@ -1,6 +1,8 @@
 from robobrowser import RoboBrowser
 from robobrowser.forms.form import Form
 
+import Database
+
 
 def scrape(browser, n):
     """get all threads from a forum page.
@@ -19,8 +21,8 @@ def scrape(browser, n):
     return (thread_urls, page_urls[-1])
 
 
-def scrape_all():
-    """Get all potentially relevant threads from the ebook board.
+def login():
+    """Login to evilzone and return a browser object.
     """
     browser = RoboBrowser(history=True)
     browser.open('https://www.evilzone.org/login')
@@ -31,7 +33,13 @@ def scrape_all():
     form["passwrd"] = input("Password: ")
 
     browser.submit_form(form)
+    return browser
 
+
+def scrape_all():
+    """Get all potentially relevant threads from the ebook board.
+    """
+    browser = login()
     threads = []
     num_page = 0
     last_url = ""
@@ -41,7 +49,19 @@ def scrape_all():
         threads += ts
         num_page += 25
     ts, last_url = scrape(browser, num_page)
-    return threads + ts
+    threads += ts
+    Database.insert_books(threads)
+
+
+def scrape_recent():
+    """Get all new threads from the ebook board.
+    """
+    # TODO: develop a more sophisticated mechanism instead of just
+    # downloading the first page.
+    print("Downloading last page...")
+    browser = login()
+    threads = scrape(browser, 0)[0]
+    return Database.insert_books(threads)
 
 
 def check_url(url):
