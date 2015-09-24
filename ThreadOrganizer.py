@@ -70,12 +70,13 @@ class Category(object):
         return ret
 
 
-def generate():
+def generate(force=False):
     """Generate a wiki article with all books.
     """
     cat = Category("Books")
-    if scrape_recent() > 0:
+    if scrape_recent() > 0 or force:
         rest = Database.get_books()
+        cat.sort_books(rest)
         ret = cat.print_it()
         ret += "= Misc =\n"
         for book in rest:
