@@ -10,13 +10,15 @@ def scrape(browser, n):
     """
     thread_urls = []
     page_urls = []
-    url = "http://www.evilzone.org/ebooks/" + str(n)
+    base_url = "http://www.evilzone.org/ebooks/"
+    url = base_url + str(n)
     browser.open(url)
     for link in browser.find_all("a"):
         url = link.get("href")
         if url:
             if check_url(url):
-                thread_urls.append(Book(link.text, url[:url.find("?")]))
+                if link.text != "eBooks" and not link.text.isdigit():
+                    thread_urls.append(Book(link.text, url[:url.find("?")]))
             if check_page_url(url):
                 page_urls.append(url)
     return (thread_urls, page_urls[-1])
@@ -44,7 +46,7 @@ def scrape_all():
     threads = []
     num_page = 0
     last_url = ""
-    while ("/ebooks/" + str(num_page)) not in last_url:
+    while ("/ebooks/" + str(num_page) + "/") not in last_url:
         ts, last_url = scrape(browser, num_page)
         print("Current: " + str(num_page))
         threads += ts
@@ -78,6 +80,7 @@ def check_url(url):
         "searching-for-ebooks" not in url and \
         "ebook-index" not in url and \
         "/ebooks/?" not in url and \
+        not url.endswith("ebooks") and \
         not check_page_url(url)
 
 
