@@ -49,8 +49,8 @@ class Category(object):
     def match(self, book_name):
         """Check whether our book matches the category.
         """
-        exclude = set(punctuation)
-        book_name = ''.join(ch for ch in book_name if ch not in exclude)
+        # exclude = set(punctuation)
+        book_name = ''.join(ch for ch in book_name if ch not in "./\\")
         for tag in self.tags:
             if " " in tag and tag in book_name.lower():
                 return True
